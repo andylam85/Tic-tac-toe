@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<!--
+  DOCTYPE tells the browser: "This is a modern HTML5 document."
+  Without it, browsers might render the page in an old "quirks mode."
+-->
+<html lang="en">
+<head>
+  <!--
+    The <head> section is invisible to the user.
+    It contains metadata (info about the page) and our CSS styles.
+  -->
+  <meta charset="UTF-8" />
+  <!-- charset="UTF-8" means: support all characters, including emoji and accents -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- viewport makes the page look correct on phones and tablets -->
+
+  <title>Tic Tac Toe</title>
+  <!-- This appears on the browser tab -->
+
+  <style>
+    /*
+      =============================================
+      CSS SECTION — This is where we style everything.
+      CSS rules look like:
+        selector { property: value; }
+      The selector picks an element; the rules change how it looks.
+      =============================================
+    */
+
+    /* ── Reset & Base ────────────────────────────────────────────────────── */
+
+    /* The * selector means "apply this to EVERY element on the page." */
+    * {
+      margin: 0;          /* Remove all default spacing around elements */
+      padding: 0;         /* Remove all default inner spacing */
+      box-sizing: border-box; /* Makes sizing math easier: padding is included in width */
+    }
+
+    /*
+      body is the entire visible page.
+      We set the dark background, the font, and use flexbox to center everything.
+      Flexbox is a layout system that lets us align items easily.
+    */
+    body {
+      background-color: #0f0f1a;   /* Very dark navy — our base dark theme color */
+      color: #e0e0f0;               /* Light lavender-white for all text */
+      font-family: 'Segoe UI', system-ui, sans-serif; /* Clean modern font */
+      min-height: 100vh;            /* vh = viewport height; 100vh = full screen height */
+      display: flex;                /* Turn on flexbox layout */
+      flex-direction: column;       /* Stack children top-to-bottom */
+      align-items: center;          /* Center children horizontally */
+      justify-content: center;      /* Center children vertically */
+      gap: 28px;                    /* Space between each child element */
+      padding: 24px;
+    }
+
+    /* ── Title ───────────────────────────────────────────────────────────── */
+
+    h1 {
+      font-size: 2.4rem;           /* rem = relative to root font size; 2.4rem ≈ 38px */
+      font-weight: 700;
+      letter-spacing: 4px;         /* Spread letters apart for a clean look */
+      text-transform: uppercase;
+      /* Gradient text: paint the text with a color gradient instead of solid color */
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;   /* Clip the gradient to only show through text */
+      -webkit-text-fill-color: transparent; /* Make the text itself transparent so gradient shows */
+      background-clip: text;
+    }
+
+    /* ── Scoreboard ──────────────────────────────────────────────────────── */
+
+    /*
+      The scoreboard is a flex container holding two score cards side by side.
+      We use gap to put space between them.
+    */
+    .scoreboard {
+      display: flex;
+      gap: 24px;
+    }
+
+    /* Each score card is a little box */
+    .score-card {
+      background: #1a1a2e;         /* Slightly lighter than body — creates depth */
+      border: 1px solid #2d2d4e;   /* Subtle border */
+      border-radius: 12px;         /* Rounded corners */
+      padding: 16px 32px;
+      text-align: center;
+      min-width: 110px;
+      transition: transform 0.2s; /* Smooth animation when this card changes */
+    }
+
+    /* When a score card gets the "winner-flash" class added by JS, animate it */
+    .score-card.winner-flash {
+      animation: flash 0.5s ease;
+    }
+
+    @keyframes flash {
+      /* @keyframes defines an animation sequence */
+      0%   { transform: scale(1); }      /* Start at normal size */
+      50%  { transform: scale(1.12); }   /* Grow 12% at the midpoint */
+      100% { transform: scale(1); }      /* Return to normal */
+    }
+
+    /* The player label inside each card ("Player X" / "Player O") */
+    .score-label {
+      font-size: 0.78rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #888aaa;
+      margin-bottom: 6px;
+    }
+
+    /* The player symbol (X or O) shown in color */
+    .score-symbol {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    /* Color X purple, O blue */
+    .score-symbol.x { color: #a78bfa; }
+    .score-symbol.o { color: #60a5fa; }
+
+    /* The actual win count number */
+    .score-number {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    /* ── Status Message ──────────────────────────────────────────────────── */
+
+    /* The line that says "X's turn" or "O wins!" */
+    #status {
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      height: 1.5rem;          /* Fixed height so the layout doesn't jump */
+      transition: opacity 0.3s;
+    }
+
+    /* ── Game Board (the 3×3 grid) ───────────────────────────────────────── */
+
+    /*
+      CSS Grid is a layout system designed for 2D grids (rows AND columns).
+      grid-template-columns: repeat(3, 100px) means:
+        "Make 3 columns, each 100px wide."
+    */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 6px;               /* Space between cells */
+    }
+
+    /* Each individual cell in the grid */
+    .cell {
+      background: #1a1a2e;
+      border-radius: 10px;
+      display: flex;          /* Center the X or O inside the cell */
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      font-weight: 800;
+      cursor: pointer;        /* Show a hand cursor on hover */
+      user-select: none;      /* Prevent text selection when clicking fast */
+      border: 2px solid #2d2d4e;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    }
+
+    /* Hover effect: lighten the cell a little */
+    .cell:hover:not(.taken) {
+      background: #24244a;
+      border-color: #4444aa;
+    }
+
+    /* When clicked, briefly shrink the cell for a "press" feel */
+    .cell:active:not(.taken) {
+      transform: scale(0.92);
+    }
+
+    /* .taken is added by JS once a cell has X or O — disable hover effect */
+    .cell.taken {
+      cursor: default;
+    }
+
+    /* Color X and O differently inside the cells */
+    .cell.x { color: #a78bfa; }  /* Purple for X */
+    .cell.o { color: #60a5fa; }  /* Blue for O */
+
+    /*
+      .winning is added by JS to the 3 cells that form the winning line.
+      We highlight them with a bright background.
+    */
+    .cell.winning {
+      background: #2d1f5e;
+      border-color: #a78bfa;
+      animation: winPulse 0.6s ease forwards;
+    }
+
+    .cell.winning.o {
+      background: #1a2f5e;
+      border-color: #60a5fa;
+    }
+
+    @keyframes winPulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────────────────── */
+
+    .buttons {
+      display: flex;
+      gap: 14px;
+    }
+
+    /* Base style shared by both buttons */
+    button {
+      padding: 12px 28px;
+      border: none;           /* Remove default browser border */
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:hover  { opacity: 0.85; }
+    button:active { transform: scale(0.96); }
+
+    /* "New Game" button — purple gradient */
+    #btn-new-game {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff;
+    }
+
+    /* "Reset Score" button — more muted, so it feels secondary */
+    #btn-reset-score {
+      background: #1e1e3a;
+      color: #888aaa;
+      border: 1px solid #2d2d4e;
+    }
+
+    /* Draw state dims the board slightly */
+    #board.draw .cell:not(.taken) {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+  <!--
+    =============================================
+    HTML SECTION — This is the skeleton of the page.
+    Each tag creates an element. We give important elements
+    an id= so JavaScript can find them by name.
+    =============================================
+  -->
+
+  <h1>Tic Tac Toe</h1>
+
+  <!-- Scoreboard: two cards, one per player -->
+  <div class="scoreboard">
+    <!-- Player X score card -->
+    <div class="score-card" id="score-card-x">
+      <div class="score-label">Player</div>
+      <div class="score-symbol x">X</div>
+      <div class="score-number" id="score-x">0</div>
+    </div>
+
+    <!-- Player O score card -->
+    <div class="score-card" id="score-card-o">
+      <div class="score-label">Player</div>
+      <div class="score-symbol o">O</div>
+      <div class="score-number" id="score-o">0</div>
+    </div>
+  </div>
+
+  <!-- Status text: tells players whose turn it is, or who won -->
+  <div id="status">X's turn</div>
+
+  <!--
+    The game board: 9 cells.
+    Each cell has:
+      - class="cell"  → styled as a grid square
+      - data-index="0..8" → JS uses this number to know which square was clicked
+  -->
+  <div id="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="buttons">
+    <button id="btn-new-game">New Game</button>
+    <button id="btn-reset-score">Reset Score</button>
+  </div>
+
+  <script>
+    /*
+      =============================================
+      JAVASCRIPT SECTION — This is the brain of the page.
+
+      JavaScript runs in your browser. When the user clicks something,
+      JS functions respond and update the page.
+
+      Key concepts used here:
+        - Variables (let/const): store data
+        - Arrays: a list of values, e.g. [null, 'X', null, ...]
+        - Functions: reusable blocks of code
+        - DOM manipulation: JS reaching into the HTML to read/change elements
+        - Event listeners: JS "listening" for user actions like clicks
+      =============================================
+    */
+
+    // ── Constants ──────────────────────────────────────────────────────────
+
+    /*
+      document.getElementById('board') finds the element with id="board"
+      and gives us a reference to it so we can work with it in JS.
+      We do this once and store the reference so we don't have to look
+      it up repeatedly.
+    */
+    const boardEl    = document.getElementById('board');
+    const statusEl   = document.getElementById('status');
+    const scoreXEl   = document.getElementById('score-x');
+    const scoreOEl   = document.getElementById('score-o');
+    const cardXEl    = document.getElementById('score-card-x');
+    const cardOEl    = document.getElementById('score-card-o');
+    const btnNewGame = document.getElementById('btn-new-game');
+    const btnReset   = document.getElementById('btn-reset-score');
+
+    /*
+      querySelectorAll('.cell') finds ALL elements with class="cell"
+      and returns them as a NodeList (similar to an array).
+      This gives us all 9 cells at once.
+    */
+    const cells = document.querySelectorAll('.cell');
+
+    /*
+      ALL 8 WINNING COMBINATIONS.
+      The board is numbered 0–8 like this:
+        0 | 1 | 2
+        3 | 4 | 5
+        6 | 7 | 8
+      Each inner array is one possible winning line.
+    */
+    const WINNING_LINES = [
+      [0, 1, 2], // top row
+      [3, 4, 5], // middle row
+      [6, 7, 8], // bottom row
+      [0, 3, 6], // left column
+      [1, 4, 7], // middle column
+      [2, 5, 8], // right column
+      [0, 4, 8], // diagonal top-left to bottom-right
+      [2, 4, 6], // diagonal top-right to bottom-left
+    ];
+
+    // ── Game State Variables ───────────────────────────────────────────────
+
+    /*
+      These variables hold the *current state* of the game.
+      'let' means we can reassign them later (unlike 'const' which is fixed).
+
+      board: an array of 9 slots; null means empty, 'X' or 'O' means played.
+      currentPlayer: whose turn it is — starts as 'X'.
+      gameOver: a flag (true/false) so we stop accepting clicks after a win.
+      scores: an object holding each player's total wins across rounds.
+    */
+    let board         = Array(9).fill(null); // [null, null, null, null, null, null, null, null, null]
+    let currentPlayer = 'X';
+    let gameOver      = false;
+    let scores        = { X: 0, O: 0 };
+
+    // ── Core Functions ─────────────────────────────────────────────────────
+
+    /*
+      checkWinner()
+      Loops through every possible winning line.
+      For each line, it checks if all three board slots contain the same player.
+      Returns the winning player ('X' or 'O') and the winning line,
+      or null if nobody has won yet.
+    */
+    function checkWinner() {
+      for (const line of WINNING_LINES) {
+        const [a, b, c] = line;  // Destructure: pull out the three indexes
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          // board[a] is truthy (not null), AND all three match → winner found!
+          return { player: board[a], line };
+        }
+      }
+      return null; // No winner found
+    }
+
+    /*
+      checkDraw()
+      Returns true if every cell is filled (no nulls left) and there's no winner.
+      Array.prototype.every() returns true if ALL elements pass the test.
+    */
+    function checkDraw() {
+      return board.every(cell => cell !== null);
+    }
+
+    /*
+      handleClick(event)
+      This function runs whenever a player clicks any cell.
+      'event' is an object the browser creates automatically, containing
+      information about the click — including which element was clicked.
+    */
+    function handleClick(event) {
+      const cell  = event.currentTarget; // The cell that was clicked
+      const index = parseInt(cell.dataset.index); // Get the 0–8 number from data-index="..."
+      // parseInt converts the string "3" into the number 3
+
+      // Guard clauses: stop immediately if these conditions are true
+      if (gameOver)         return; // Game already ended, ignore clicks
+      if (board[index])     return; // This cell already has X or O, ignore
+
+      // Place the current player's mark in the board array
+      board[index] = currentPlayer;
+
+      // Update the visual cell: add the letter and CSS classes
+      cell.textContent = currentPlayer;       // Show 'X' or 'O' as text
+      cell.classList.add('taken');            // Prevent hover effect
+      cell.classList.add(currentPlayer.toLowerCase()); // Add 'x' or 'o' class for color
+
+      // Check if this move created a winner
+      const result = checkWinner();
+      if (result) {
+        gameOver = true;
+
+        // Highlight the three winning cells
+        result.line.forEach(i => {
+          cells[i].classList.add('winning');
+          // Also add 'o' class to winning cells if O won, for the blue highlight
+          if (result.player === 'O') cells[i].classList.add('o');
+        });
+
+        // Update the status message
+        statusEl.textContent = `${result.player} wins! 🎉`;
+
+        // Add a win to the correct player's score
+        scores[result.player]++;
+
+        // Update the score display on screen
+        if (result.player === 'X') {
+          scoreXEl.textContent = scores.X;
+          flashCard(cardXEl); // Animate the X score card
+        } else {
+          scoreOEl.textContent = scores.O;
+          flashCard(cardOEl); // Animate the O score card
+        }
+        return; // Stop here — no need to check for draw or switch turns
+      }
+
+      // Check if the board is full (draw)
+      if (checkDraw()) {
+        gameOver = true;
+        statusEl.textContent = "It's a draw!";
+        boardEl.classList.add('draw'); // Dim empty cells
+        return;
+      }
+
+      // No winner, no draw → switch to the other player
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      // The above line uses a "ternary operator" — a compact if/else:
+      // condition ? valueIfTrue : valueIfFalse
+
+      statusEl.textContent = `${currentPlayer}'s turn`;
+    }
+
+    /*
+      flashCard(cardElement)
+      Briefly animates the score card by adding the 'winner-flash' CSS class,
+      then removing it after the animation finishes so it can be triggered again.
+    */
+    function flashCard(cardEl) {
+      cardEl.classList.remove('winner-flash'); // Reset in case it's still animating
+      // We use requestAnimationFrame + setTimeout to force the browser to
+      // re-render between remove and add — this restarts the animation cleanly.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          cardEl.classList.add('winner-flash');
+        });
+      });
+    }
+
+    /*
+      newGame()
+      Resets the board for a fresh round WITHOUT touching the scores.
+      We clear the board array, reset the flags, and clean up the cells visually.
+    */
+    function newGame() {
+      board         = Array(9).fill(null); // Empty all 9 slots
+      currentPlayer = 'X';                // X always goes first
+      gameOver      = false;
+      boardEl.classList.remove('draw');   // Remove draw styling
+
+      // Loop through all 9 cells and clear them
+      cells.forEach(cell => {
+        cell.textContent = '';            // Remove the X or O text
+        cell.className = 'cell';          // Reset to just the base class
+        // (This removes 'taken', 'x', 'o', 'winning' all at once)
+      });
+
+      statusEl.textContent = "X's turn";
+    }
+
+    /*
+      resetScore()
+      Resets scores to 0 and starts a new game.
+    */
+    function resetScore() {
+      scores = { X: 0, O: 0 };
+      scoreXEl.textContent = '0';
+      scoreOEl.textContent = '0';
+      newGame();
+    }
+
+    // ── Event Listeners ────────────────────────────────────────────────────
+
+    /*
+      addEventListener connects a function to a user action (an "event").
+      Here: "when the user clicks this cell, run handleClick."
+
+      We use forEach to attach the listener to all 9 cells in one go.
+    */
+    cells.forEach(cell => {
+      cell.addEventListener('click', handleClick);
+    });
+
+    // Connect the buttons to their functions
+    btnNewGame.addEventListener('click', newGame);
+    btnReset.addEventListener('click', resetScore);
+
+    /*
+      That's it! The page is now fully interactive.
+      When this <script> tag finishes running, the browser waits for
+      user events (clicks) and calls the right function each time.
+    */
+  </script>
+</body>
+</html>
