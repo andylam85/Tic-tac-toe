@@ -377,6 +377,22 @@
     }
     .timer-bar.yellow { background:#fbbf24; }
     .timer-bar.red    { background:#f87171; }
+
+    /* ── Practice Scoreboard ──────────────────────────────────────────────── */
+    .prac-score { display:flex; gap:10px; }
+    .ps-card {
+      flex:1; background:#1a1a2e; border:1px solid #2d2d4e;
+      border-radius:10px; padding:10px 8px;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      transition:transform .2s;
+    }
+    .ps-card.flash { animation:psFlash .4s ease; }
+    @keyframes psFlash { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+    .ps-label { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:#888aaa; }
+    .ps-num   { font-size:1.6rem; font-weight:800; line-height:1; }
+    .ps-card.win  { border-color:#14532d; } .ps-card.win  .ps-num { color:#4ade80; }
+    .ps-card.loss { border-color:#4c1a1a; } .ps-card.loss .ps-num { color:#f87171; }
+    .ps-card.draw { border-color:#2d2d4e; } .ps-card.draw .ps-num { color:#888aaa; }
   </style>
 </head>
 
@@ -493,7 +509,22 @@
       </div>
       <div class="prac-controls">
         <button class="hint-btn" id="hint-toggle">💡 Hints: ON</button>
+        <button class="hint-btn" id="score-toggle">📊 Score: ON</button>
         <button class="sec-btn" id="prac-new">New Game</button>
+      </div>
+      <div class="prac-score" id="prac-score">
+        <div class="ps-card win">
+          <span class="ps-label">Wins</span>
+          <span class="ps-num" id="ps-wins">0</span>
+        </div>
+        <div class="ps-card loss">
+          <span class="ps-label">Losses</span>
+          <span class="ps-num" id="ps-losses">0</span>
+        </div>
+        <div class="ps-card draw">
+          <span class="ps-label">Draws</span>
+          <span class="ps-num" id="ps-draws">0</span>
+        </div>
       </div>
       <div class="prac-controls">
         <div class="ctrl-group">
@@ -920,6 +951,8 @@
     let timeLimit    = 5;
     let timeLeft     = 5;
     let timerIntId   = null; // setInterval handle for the countdown
+    let pracScores   = { wins: 0, losses: 0, draws: 0 };
+    let scoreVisible = true;
 
     const pracBoardEl  = document.getElementById('practice-board');
     const pcells       = pracBoardEl.querySelectorAll('.pcell');
@@ -929,12 +962,32 @@
     const hintToggleEl = document.getElementById('hint-toggle');
     const pracNewEl    = document.getElementById('prac-new');
     const timerWrapEl  = document.getElementById('timer-wrap');
+    const scoreToggleEl  = document.getElementById('score-toggle');
+    const pracScoreEl    = document.getElementById('prac-score');
+    const psWinsEl       = document.getElementById('ps-wins');
+    const psLossesEl     = document.getElementById('ps-losses');
+    const psDrawsEl      = document.getElementById('ps-draws');
     const timerNumEl   = document.getElementById('timer-number');
     const timerBarEl   = document.getElementById('timer-bar');
     const timerSlider  = document.getElementById('timer-slider');
     const timerValLbl  = document.getElementById('timer-val-label');
 
     // ── Timer functions ───────────────────────────────────────────────────
+    function flashCard(el) {
+      el.classList.remove('flash');
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add('flash');
+    }
+    function updatePracScore() {
+      psWinsEl.textContent   = pracScores.wins;
+      psLossesEl.textContent = pracScores.losses;
+      psDrawsEl.textContent  = pracScores.draws;
+    }
+    function resetPracScore() {
+      pracScores = { wins: 0, losses: 0, draws: 0 };
+      updatePracScore();
+    }
+
     function stopTimer() {
       if (timerIntId) { clearInterval(timerIntId); timerIntId = null; }
     }
@@ -965,6 +1018,9 @@
       stopTimer();
       timerNumEl.textContent = '0';
       timerBarEl.style.width = '0%';
+      pracScores.losses++;
+      updatePracScore();
+      flashCard(pracScoreEl.querySelector('.ps-card.loss'));
       pracStatusEl.textContent = "⏰ Time's up! Auto-loss.";
       hintBoxEl.className = 'hint-box hb';
       hintBoxEl.textContent = "Too slow! Lower your time limit to build up speed gradually.";
@@ -1062,6 +1118,9 @@
             pcells[i].classList.add('winning');
             if (res.player === 'O') pcells[i].classList.add('o');
           });
+          pracScores.losses++;
+          updatePracScore();
+          flashCard(pracScoreEl.querySelector('.ps-card.loss'));
           pracStatusEl.textContent = 'AI wins — try again with hints on!';
           hintBoxEl.className = 'hint-box hb';
           hintBoxEl.textContent = "💡 Notice where AI created two threats at once — that's a fork!";
@@ -1069,6 +1128,9 @@
         }
         if (pBoard.every(x => x)) {
           pOver = true;
+          pracScores.draws++;
+          updatePracScore();
+          flashCard(pracScoreEl.querySelector('.ps-card.draw'));
           pracStatusEl.textContent = 'Draw — great defense!';
           hintBoxEl.className = 'hint-box';
           hintBoxEl.textContent = 'Perfect play from both sides always ends in a draw.';
@@ -1101,6 +1163,9 @@
           pcells[i].classList.add('winning');
           if (res.player === 'O') pcells[i].classList.add('o');
         });
+        pracScores.wins++;
+        updatePracScore();
+        flashCard(pracScoreEl.querySelector('.ps-card.win'));
         pracStatusEl.textContent = 'You win! 🎉';
         hintBoxEl.className = 'hint-box hw';
         hintBoxEl.textContent = '🏆 You found the winning move!';
@@ -1109,6 +1174,9 @@
       }
       if (pBoard.every(x => x)) {
         pOver = true;
+        pracScores.draws++;
+        updatePracScore();
+        flashCard(pracScoreEl.querySelector('.ps-card.draw'));
         pracStatusEl.textContent = 'Draw!';
         hintBoxEl.className = 'hint-box';
         hintBoxEl.textContent = 'Perfect play from both sides — a draw!';
@@ -1155,6 +1223,13 @@
       } else { updateHint(); }
     });
 
+    scoreToggleEl.addEventListener('click', () => {
+      scoreVisible = !scoreVisible;
+      scoreToggleEl.textContent = scoreVisible ? '📊 Score: ON' : '📊 Score: OFF';
+      scoreToggleEl.classList.toggle('off', !scoreVisible);
+      pracScoreEl.classList.toggle('hidden', !scoreVisible);
+    });
+
     pracNewEl.addEventListener('click', pracReset);
 
     document.querySelectorAll('#difficulty-group .tog').forEach(btn => {
@@ -1162,6 +1237,7 @@
         document.querySelectorAll('#difficulty-group .tog').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         difficulty = btn.dataset.val;
+        resetPracScore();
         pracReset();
       });
     });
