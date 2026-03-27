@@ -50,7 +50,7 @@
       display: flex;                /* Turn on flexbox layout */
       flex-direction: column;       /* Stack children top-to-bottom */
       align-items: center;          /* Center children horizontally */
-      justify-content: center;      /* Center children vertically */
+      justify-content: flex-start;  /* Stack from top (learn tab is tall) */
       gap: 28px;                    /* Space between each child element */
       padding: 24px;
     }
@@ -248,6 +248,87 @@
     #board.draw .cell:not(.taken) {
       opacity: 0.5;
     }
+
+    /* ── Tab Bar ──────────────────────────────────────────────────────────── */
+    .tab-bar { display:flex; gap:6px; background:#1a1a2e; border:1px solid #2d2d4e; border-radius:12px; padding:5px; }
+    .tab { padding:10px 32px; border-radius:8px; background:transparent; color:#888aaa; font-size:.95rem; letter-spacing:1px; border:none; cursor:pointer; transition:background .2s,color .2s; }
+    .tab.active { background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; }
+    .hidden { display:none !important; }
+    #play-section { display:flex; flex-direction:column; align-items:center; gap:28px; width:100%; }
+
+    /* ── Learn Layout ─────────────────────────────────────────────────────── */
+    #learn-section { width:100%; max-width:680px; display:flex; flex-direction:column; gap:36px; padding-bottom:40px; }
+    .learn-block { display:flex; flex-direction:column; gap:14px; }
+    .learn-title { font-size:1rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; background:linear-gradient(135deg,#a78bfa,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .learn-sub { font-size:.85rem; color:#888aaa; margin-top:-8px; }
+
+    /* ── Strategy Cards ───────────────────────────────────────────────────── */
+    .strategy-cards { display:flex; flex-wrap:wrap; gap:10px; }
+    .s-card { background:#1a1a2e; border:1px solid #2d2d4e; border-radius:12px; padding:14px; flex:1 1 160px; display:flex; flex-direction:column; gap:7px; transition:border-color .2s; }
+    .s-card:hover { border-color:#4444aa; }
+    .badge { font-size:.62rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:3px 8px; border-radius:20px; width:fit-content; }
+    .b-win  { background:#14532d; color:#4ade80; }
+    .b-block{ background:#4c1a1a; color:#f87171; }
+    .b-fork { background:#451a03; color:#fbbf24; }
+    .b-bfork{ background:#431407; color:#fb923c; }
+    .b-ctr  { background:#2e1065; color:#c4b5fd; }
+    .b-corn { background:#0c2451; color:#93c5fd; }
+    .b-edge { background:#1a1a2e; color:#888aaa; border:1px solid #2d2d4e; }
+    .s-name { font-size:.95rem; font-weight:700; }
+    .s-desc { font-size:.78rem; color:#888aaa; line-height:1.5; }
+    .mini-board { display:grid; grid-template-columns:repeat(3,26px); grid-template-rows:repeat(3,26px); gap:3px; margin-top:4px; }
+    .mb { background:#0f0f1a; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; border:1px solid #2d2d4e; }
+    .mb.mx { color:#a78bfa; } .mb.mo { color:#60a5fa; }
+    .mb.mg { background:#14532d; border-color:#4ade80; color:#4ade80; }
+    .mb.mr { background:#4c1a1a; border-color:#f87171; color:#f87171; }
+    .mb.my { background:#451a03; border-color:#fbbf24; color:#fbbf24; }
+    .mb.mp { background:#2e1065; border-color:#c4b5fd; color:#c4b5fd; }
+    .mb.mb2{ background:#0c2451; border-color:#93c5fd; color:#93c5fd; }
+    .mb.mq { background:#1e1e3a; border-color:#888aaa; color:#888aaa; }
+
+    /* ── Position Guide ───────────────────────────────────────────────────── */
+    .pos-guide { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .pos-grid { display:grid; grid-template-columns:repeat(3,64px); grid-template-rows:repeat(3,64px); gap:5px; }
+    .pos-cell { border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:.58rem; font-weight:700; letter-spacing:.5px; text-transform:uppercase; gap:2px; border:2px solid transparent; }
+    .pos-cell.pc  { background:#2e1065; border-color:#a78bfa; color:#c4b5fd; }
+    .pos-cell.pco { background:#0c2451; border-color:#3b82f6; color:#93c5fd; }
+    .pos-cell.pe  { background:#1a1a2e; border-color:#2d2d4e; color:#888aaa; }
+    .pos-legend { display:flex; flex-direction:column; gap:10px; font-size:.82rem; color:#888aaa; }
+    .pos-legend div { display:flex; align-items:center; gap:8px; }
+    .ldot { width:14px; height:14px; border-radius:3px; border:2px solid; flex-shrink:0; }
+    .ldot.lc { background:#2e1065; border-color:#a78bfa; }
+    .ldot.lco{ background:#0c2451; border-color:#3b82f6; }
+    .ldot.le { background:#1a1a2e; border-color:#2d2d4e; }
+
+    /* ── Practice Controls ────────────────────────────────────────────────── */
+    .prac-controls { display:flex; gap:12px; flex-wrap:wrap; }
+    .hint-btn { background:#1e1e3a; color:#a78bfa; border:1px solid #4c3a8a; padding:10px 20px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; transition:opacity .2s; }
+    .hint-btn.off { color:#888aaa; border-color:#2d2d4e; }
+    .sec-btn { background:#1e1e3a; color:#888aaa; border:1px solid #2d2d4e; padding:10px 20px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; transition:opacity .2s; }
+
+    /* ── Hint Box ─────────────────────────────────────────────────────────── */
+    .hint-box { background:#1a1a2e; border:1px solid #2d2d4e; border-radius:10px; padding:12px 16px; font-size:.88rem; color:#888aaa; min-height:44px; display:flex; align-items:center; transition:border-color .3s,color .3s; }
+    .hint-box.hw  { border-color:#4ade80; color:#4ade80; }
+    .hint-box.hb  { border-color:#f87171; color:#f87171; }
+    .hint-box.hf  { border-color:#fbbf24; color:#fbbf24; }
+    .hint-box.hbf { border-color:#fb923c; color:#fb923c; }
+    .hint-box.hc  { border-color:#a78bfa; color:#c4b5fd; }
+    .hint-box.hco { border-color:#60a5fa; color:#93c5fd; }
+
+    /* ── Practice Board ───────────────────────────────────────────────────── */
+    #practice-board { display:grid; grid-template-columns:repeat(3,100px); grid-template-rows:repeat(3,100px); gap:6px; }
+    #practice-board.ai-turn .pcell:not(.taken) { opacity:.5; cursor:not-allowed; pointer-events:none; }
+    .pcell { background:#1a1a2e; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2.6rem; font-weight:800; cursor:pointer; user-select:none; border:2px solid #2d2d4e; transition:background .15s,transform .1s,border-color .15s; }
+    .pcell:hover:not(.taken) { background:#24244a; border-color:#4444aa; }
+    .pcell:active:not(.taken) { transform:scale(.92); }
+    .pcell.taken { cursor:default; } .pcell.x { color:#a78bfa; } .pcell.o { color:#60a5fa; }
+    .pcell.hint-hl { border-color:#a78bfa !important; background:#1e1535 !important; }
+    .pcell.winning { background:#2d1f5e; border-color:#a78bfa; animation:winPulse .6s ease forwards; }
+    .pcell.winning.o { background:#1a2f5e; border-color:#60a5fa; }
+
+    /* ── AI Explanation ───────────────────────────────────────────────────── */
+    .ai-box { background:#1a1a2e; border:1px solid #1e3a5e; border-radius:10px; padding:12px 16px; font-size:.88rem; color:#60a5fa; min-height:44px; display:flex; align-items:center; }
+    #practice-status { font-size:1rem; letter-spacing:1px; min-height:1.4rem; color:#e0e0f0; }
   </style>
 </head>
 
@@ -261,6 +342,13 @@
   -->
 
   <h1>Tic Tac Toe</h1>
+
+  <div class="tab-bar">
+    <button class="tab active" data-tab="play">🎮 Play</button>
+    <button class="tab" data-tab="learn">📚 Learn</button>
+  </div>
+
+  <div id="play-section">
 
   <!-- Scoreboard: two cards, one per player -->
   <div class="scoreboard">
@@ -306,6 +394,60 @@
     <button id="btn-reset-score">Reset Score</button>
   </div>
 
+  </div><!-- /play-section -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       LEARN SECTION
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="learn-section" class="hidden">
+
+    <!-- Strategy Guide -->
+    <div class="learn-block">
+      <h2 class="learn-title">Strategy Guide</h2>
+      <p class="learn-sub">Follow these 7 priorities in order on every single turn</p>
+      <div class="strategy-cards" id="strategy-cards"></div>
+    </div>
+
+    <!-- Position Values -->
+    <div class="learn-block">
+      <h2 class="learn-title">Position Values</h2>
+      <p class="learn-sub">Not all squares are equal — the center and corners win games</p>
+      <div class="pos-guide">
+        <div class="pos-grid" id="pos-grid"></div>
+        <div class="pos-legend">
+          <div><span class="ldot lc"></span> Center — part of 4 lines</div>
+          <div><span class="ldot lco"></span> Corner — part of 3 lines</div>
+          <div><span class="ldot le"></span> Edge — part of only 2 lines</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Practice vs AI -->
+    <div class="learn-block">
+      <h2 class="learn-title">Practice vs AI</h2>
+      <p class="learn-sub">You are X. The AI plays perfect tic-tac-toe and can never lose.</p>
+      <div class="prac-controls">
+        <button class="hint-btn" id="hint-toggle">💡 Hints: ON</button>
+        <button class="sec-btn" id="prac-new">New Game</button>
+      </div>
+      <div class="hint-box" id="hint-box">Click any cell to make your first move</div>
+      <div id="practice-board">
+        <div class="pcell" data-i="0"></div>
+        <div class="pcell" data-i="1"></div>
+        <div class="pcell" data-i="2"></div>
+        <div class="pcell" data-i="3"></div>
+        <div class="pcell" data-i="4"></div>
+        <div class="pcell" data-i="5"></div>
+        <div class="pcell" data-i="6"></div>
+        <div class="pcell" data-i="7"></div>
+        <div class="pcell" data-i="8"></div>
+      </div>
+      <div class="ai-box" id="ai-box">AI is waiting for your move...</div>
+      <div id="practice-status"></div>
+    </div>
+
+  </div><!-- /learn-section -->
+
   <script>
     /*
       =============================================
@@ -345,7 +487,7 @@
       and returns them as a NodeList (similar to an array).
       This gives us all 9 cells at once.
     */
-    const cells = document.querySelectorAll('.cell');
+    const cells = boardEl.querySelectorAll('.cell');
 
     /*
       ALL 8 WINNING COMBINATIONS.
@@ -548,6 +690,340 @@
       When this <script> tag finishes running, the browser waits for
       user events (clicks) and calls the right function each time.
     */
+
+    // ══════════════════════════════════════════════════════════════════════
+    // TAB SWITCHING
+    // ══════════════════════════════════════════════════════════════════════
+    const tabs      = document.querySelectorAll('.tab');
+    const playSec   = document.getElementById('play-section');
+    const learnSec  = document.getElementById('learn-section');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.tab === 'play') {
+          playSec.classList.remove('hidden');
+          learnSec.classList.add('hidden');
+        } else {
+          playSec.classList.add('hidden');
+          learnSec.classList.remove('hidden');
+        }
+      });
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // SHARED STRATEGY ENGINE
+    // Used by both the hint system and the AI explanation box.
+    // Implements the 7-priority decision hierarchy.
+    // ══════════════════════════════════════════════════════════════════════
+
+    // Find the index where 'player' can win in one move. Returns -1 if none.
+    function findWin(b, player) {
+      for (const [a, bb, c] of WINNING_LINES) {
+        const vals = [b[a], b[bb], b[c]];
+        if (vals.filter(v => v === player).length === 2 && vals.includes(null))
+          return [a, bb, c][vals.indexOf(null)];
+      }
+      return -1;
+    }
+
+    // Find an index that gives 'player' two simultaneous winning threats (a fork).
+    function findFork(b, player) {
+      for (let i = 0; i < 9; i++) {
+        if (b[i]) continue;
+        b[i] = player;
+        const threats = WINNING_LINES.filter(([a, bb, c]) => {
+          const v = [b[a], b[bb], b[c]];
+          return v.filter(x => x === player).length === 2 && v.includes(null);
+        }).length;
+        b[i] = null;
+        if (threats >= 2) return i;
+      }
+      return -1;
+    }
+
+    // Returns the best move for 'player' with a plain-English reason.
+    function getStrategyMove(b, player) {
+      const opp = player === 'X' ? 'O' : 'X';
+      let idx;
+
+      if ((idx = findWin(b, player)) !== -1)
+        return { idx, reason: '🏆 Win! Complete your line right now.', cls: 'hw' };
+      if ((idx = findWin(b, opp)) !== -1)
+        return { idx, reason: '🛡️ Block! Opponent would win there.', cls: 'hb' };
+      if ((idx = findFork(b, player)) !== -1)
+        return { idx, reason: '⚡ Fork! Creates two ways to win — opponent can only block one.', cls: 'hf' };
+      if ((idx = findFork(b, opp)) !== -1)
+        return { idx, reason: '🛡️ Block fork! Stops opponent creating two threats at once.', cls: 'hbf' };
+      if (!b[4])
+        return { idx: 4, reason: "⭐ Take the center — it's part of 4 winning lines.", cls: 'hc' };
+
+      // Opposite corner (counters opponent's corner strategy)
+      const oppCorner = [0,2,6,8].find(i => b[i] === opp);
+      if (oppCorner !== undefined) {
+        const opposite = {0:8, 2:6, 6:2, 8:0}[oppCorner];
+        if (!b[opposite])
+          return { idx: opposite, reason: '◆ Opposite corner — prevents opponent fork.', cls: 'hco' };
+      }
+      const corner = [0,2,6,8].find(i => !b[i]);
+      if (corner !== undefined)
+        return { idx: corner, reason: '◆ Take a corner — controls 3 lines, better than any edge.', cls: 'hco' };
+
+      const edge = [1,3,5,7].find(i => !b[i]);
+      if (edge !== undefined)
+        return { idx: edge, reason: '▪ Take an edge — only available option.', cls: '' };
+
+      return null;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MINIMAX AI
+    // Recursively scores every possible future game state.
+    // O (AI) tries to maximize score; X (player) tries to minimize it.
+    // Score +10 = AI wins, -10 = player wins, 0 = draw.
+    // Depth penalty means AI prefers faster wins and slower losses.
+    // ══════════════════════════════════════════════════════════════════════
+    function minimax(b, depth, isMax) {
+      for (const [a, bb, c] of WINNING_LINES) {
+        if (b[a] && b[a] === b[bb] && b[a] === b[c])
+          return b[a] === 'O' ? 10 - depth : depth - 10;
+      }
+      if (b.every(x => x)) return 0;
+
+      if (isMax) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) { b[i]='O'; best=Math.max(best,minimax(b,depth+1,false)); b[i]=null; }
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) { b[i]='X'; best=Math.min(best,minimax(b,depth+1,true)); b[i]=null; }
+        }
+        return best;
+      }
+    }
+
+    function getBestAIMove(b) {
+      let best = -Infinity, idx = -1;
+      for (let i = 0; i < 9; i++) {
+        if (!b[i]) {
+          b[i] = 'O';
+          const s = minimax(b, 0, false);
+          b[i] = null;
+          if (s > best) { best = s; idx = i; }
+        }
+      }
+      return idx;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // PRACTICE GAME
+    // Separate state from the main game — they never interfere.
+    // ══════════════════════════════════════════════════════════════════════
+    let pBoard   = Array(9).fill(null);
+    let pOver    = false;
+    let hintsOn  = true;
+
+    const pracBoardEl  = document.getElementById('practice-board');
+    const pcells       = pracBoardEl.querySelectorAll('.pcell');
+    const hintBoxEl    = document.getElementById('hint-box');
+    const aiBoxEl      = document.getElementById('ai-box');
+    const pracStatusEl = document.getElementById('practice-status');
+    const hintToggleEl = document.getElementById('hint-toggle');
+    const pracNewEl    = document.getElementById('prac-new');
+
+    function updateHint() {
+      pcells.forEach(c => c.classList.remove('hint-hl'));
+      if (!hintsOn || pOver) { hintBoxEl.className = 'hint-box'; return; }
+      const move = getStrategyMove(pBoard, 'X');
+      if (!move) return;
+      hintBoxEl.className = 'hint-box ' + (move.cls || '');
+      hintBoxEl.textContent = move.reason;
+      pcells[move.idx].classList.add('hint-hl');
+    }
+
+    function checkPracWin(b) {
+      for (const line of WINNING_LINES) {
+        const [a, bb, c] = line;
+        if (b[a] && b[a] === b[bb] && b[a] === b[c]) return { player: b[a], line };
+      }
+      return null;
+    }
+
+    function pracClick(e) {
+      if (pOver || pracBoardEl.classList.contains('ai-turn')) return;
+      const idx = parseInt(e.currentTarget.dataset.i);
+      if (pBoard[idx]) return;
+
+      // Player move (X)
+      pBoard[idx] = 'X';
+      pcells[idx].textContent = 'X';
+      pcells[idx].classList.add('taken', 'x');
+      pcells.forEach(c => c.classList.remove('hint-hl'));
+
+      let res = checkPracWin(pBoard);
+      if (res) {
+        pOver = true;
+        res.line.forEach(i => pcells[i].classList.add('winning'));
+        pracStatusEl.textContent = 'You win! 🎉';
+        hintBoxEl.className = 'hint-box hw';
+        hintBoxEl.textContent = '🏆 You found the winning move!';
+        aiBoxEl.textContent = '';
+        return;
+      }
+      if (pBoard.every(x => x)) {
+        pOver = true;
+        pracStatusEl.textContent = "Draw!";
+        hintBoxEl.className = 'hint-box';
+        hintBoxEl.textContent = 'Perfect defense from both sides — a draw!';
+        return;
+      }
+
+      // AI turn
+      pracBoardEl.classList.add('ai-turn');
+      pracStatusEl.textContent = 'AI is thinking...';
+      hintBoxEl.className = 'hint-box';
+      hintBoxEl.textContent = '';
+
+      setTimeout(() => {
+        const aiIdx = getBestAIMove([...pBoard]);
+        // Explain AI move using strategy hierarchy
+        const explanation = getStrategyMove(pBoard, 'O');
+        pBoard[aiIdx] = 'O';
+        pcells[aiIdx].textContent = 'O';
+        pcells[aiIdx].classList.add('taken', 'o');
+        pracBoardEl.classList.remove('ai-turn');
+
+        if (explanation && explanation.idx === aiIdx) {
+          aiBoxEl.textContent = 'AI: ' + explanation.reason;
+        } else {
+          aiBoxEl.textContent = 'AI played the optimal move.';
+        }
+
+        res = checkPracWin(pBoard);
+        if (res) {
+          pOver = true;
+          res.line.forEach(i => { pcells[i].classList.add('winning', 'o'); });
+          pracStatusEl.textContent = 'AI wins — study the hints and try again!';
+          hintBoxEl.className = 'hint-box hb';
+          hintBoxEl.textContent = '💡 Look at where the AI built two threats. Use hints next time!';
+          return;
+        }
+        if (pBoard.every(x => x)) {
+          pOver = true;
+          pracStatusEl.textContent = "Draw — well played!";
+          return;
+        }
+
+        pracStatusEl.textContent = 'Your turn (X)';
+        updateHint();
+      }, 650);
+    }
+
+    function pracReset() {
+      pBoard = Array(9).fill(null);
+      pOver  = false;
+      pracBoardEl.classList.remove('ai-turn');
+      pcells.forEach(c => { c.textContent = ''; c.className = 'pcell'; });
+      pracStatusEl.textContent = 'Your turn (X)';
+      aiBoxEl.textContent = 'AI is waiting for your move...';
+      updateHint();
+    }
+
+    pcells.forEach(c => c.addEventListener('click', pracClick));
+    hintToggleEl.addEventListener('click', () => {
+      hintsOn = !hintsOn;
+      hintToggleEl.textContent = hintsOn ? '💡 Hints: ON' : '💡 Hints: OFF';
+      hintToggleEl.classList.toggle('off', !hintsOn);
+      if (!hintsOn) {
+        pcells.forEach(c => c.classList.remove('hint-hl'));
+        hintBoxEl.className = 'hint-box';
+        hintBoxEl.textContent = 'Hints off — trust your instincts!';
+      } else { updateHint(); }
+    });
+    pracNewEl.addEventListener('click', pracReset);
+
+    // ══════════════════════════════════════════════════════════════════════
+    // STRATEGY CARD RENDERING
+    // Builds the 7 strategy cards dynamically using JavaScript.
+    // Each card gets a mini 3x3 board showing a real example.
+    // ══════════════════════════════════════════════════════════════════════
+    const STRATEGIES = [
+      { badge:'Priority 1', bc:'b-win',  name:'Win',
+        desc:'If you can complete a line on this move, take it immediately — no exceptions.',
+        board:['X',null,'X',null,'O',null,'O',null,null], hl:[{i:1,cls:'mg',t:'★'}] },
+      { badge:'Priority 2', bc:'b-block', name:'Block',
+        desc:"If opponent has two in a row, block the third square. This always overrides offense.",
+        board:['O',null,'O',null,'X',null,null,null,null], hl:[{i:1,cls:'mr',t:'!'}] },
+      { badge:'Priority 3', bc:'b-fork', name:'Fork',
+        desc:'Create two winning threats at once. Opponent can only block one — you win next turn.',
+        board:['X',null,null,null,'X',null,null,null,null], hl:[{i:8,cls:'my',t:'⚡'}] },
+      { badge:'Priority 4', bc:'b-bfork', name:'Block Fork',
+        desc:"Prevent opponent from building two threats simultaneously before they complete the setup.",
+        board:['O',null,null,null,'X',null,null,null,'O'], hl:[{i:2,cls:'mr',t:'!'},{i:6,cls:'mr',t:'!'}] },
+      { badge:'Priority 5', bc:'b-ctr', name:'Center',
+        desc:"The center square is part of 4 winning lines — rows, columns, and both diagonals.",
+        board:Array(9).fill(null), hl:[{i:4,cls:'mp',t:'★'}] },
+      { badge:'Priority 6', bc:'b-corn', name:'Corner',
+        desc:'Corners each control 3 lines. Much more powerful than edges. Take them over edges.',
+        board:[null,null,null,null,'X',null,null,null,null],
+        hl:[{i:0,cls:'mb2',t:'◆'},{i:2,cls:'mb2',t:'◆'},{i:6,cls:'mb2',t:'◆'},{i:8,cls:'mb2',t:'◆'}] },
+      { badge:'Priority 7', bc:'b-edge', name:'Edge',
+        desc:'Edges only control 2 lines. Take them last when no better option exists.',
+        board:['X',null,'X',null,'O',null,'X',null,'X'],
+        hl:[{i:1,cls:'mq',t:'▪'},{i:3,cls:'mq',t:'▪'},{i:5,cls:'mq',t:'▪'},{i:7,cls:'mq',t:'▪'}] },
+    ];
+
+    function makeMiniBoard(board, hl) {
+      return board.map((cell, i) => {
+        const h = hl.find(x => x.i === i);
+        let cls = 'mb', text = '';
+        if (h)           { cls += ' ' + h.cls; text = h.t; }
+        else if (cell==='X') { cls += ' mx'; text = 'X'; }
+        else if (cell==='O') { cls += ' mo'; text = 'O'; }
+        return `<div class="${cls}">${text}</div>`;
+      }).join('');
+    }
+
+    const cardsEl = document.getElementById('strategy-cards');
+    STRATEGIES.forEach(s => {
+      const d = document.createElement('div');
+      d.className = 's-card';
+      d.innerHTML = `<span class="badge ${s.bc}">${s.badge}</span>
+        <div class="s-name">${s.name}</div>
+        <div class="s-desc">${s.desc}</div>
+        <div class="mini-board">${makeMiniBoard(s.board, s.hl)}</div>`;
+      cardsEl.appendChild(d);
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // POSITION GUIDE RENDERING
+    // Visual 3x3 grid showing center > corner > edge value.
+    // ══════════════════════════════════════════════════════════════════════
+    const POS = [
+      {cls:'pco',stars:'★★★',lbl:'Corner'},
+      {cls:'pe', stars:'★★', lbl:'Edge'},
+      {cls:'pco',stars:'★★★',lbl:'Corner'},
+      {cls:'pe', stars:'★★', lbl:'Edge'},
+      {cls:'pc', stars:'★★★★',lbl:'Center'},
+      {cls:'pe', stars:'★★', lbl:'Edge'},
+      {cls:'pco',stars:'★★★',lbl:'Corner'},
+      {cls:'pe', stars:'★★', lbl:'Edge'},
+      {cls:'pco',stars:'★★★',lbl:'Corner'},
+    ];
+    const posGridEl = document.getElementById('pos-grid');
+    POS.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'pos-cell ' + p.cls;
+      d.innerHTML = `<span>${p.stars}</span><span>${p.lbl}</span>`;
+      posGridEl.appendChild(d);
+    });
+
+    // Init practice hint on page load
+    updateHint();
   </script>
 </body>
 </html>
