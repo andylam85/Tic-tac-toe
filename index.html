@@ -452,6 +452,17 @@
     <div class="cell" data-index="8"></div>
   </div>
 
+  <!-- Timer countdown — right below the board for visibility -->
+  <div id="v1-timer-wrap" class="timer-wrap hidden">
+    <div class="timer-header">
+      <span class="timer-label-txt">⏱ Time Left</span>
+      <div class="timer-number" id="v1-timer-number">5</div>
+    </div>
+    <div class="timer-bar-wrap">
+      <div class="timer-bar" id="v1-timer-bar"></div>
+    </div>
+  </div>
+
   <!-- Action buttons -->
   <div class="buttons">
     <button id="btn-new-game">New Game</button>
@@ -473,15 +484,6 @@
         <input type="range" id="v1-timer-slider" min="0" max="10" value="0" step="1" />
         <span class="timer-val" id="v1-timer-val-label">Off</span>
       </div>
-    </div>
-  </div>
-  <div id="v1-timer-wrap" class="timer-wrap hidden">
-    <div class="timer-header">
-      <span class="timer-label-txt">⏱ Time Left</span>
-      <div class="timer-number" id="v1-timer-number">5</div>
-    </div>
-    <div class="timer-bar-wrap">
-      <div class="timer-bar" id="v1-timer-bar"></div>
     </div>
   </div>
 
