@@ -848,13 +848,14 @@
     // Supports difficulty (easy / medium / unbeatable) and user choosing
     // to play as X (goes first) or O (goes second, AI opens).
     // ══════════════════════════════════════════════════════════════════════
-    let pBoard     = Array(9).fill(null);
-    let pOver      = false;
-    let hintsOn    = true;
-    let difficulty = 'unbeatable';
-    let userPlayer = 'X';
-    let aiPlayer   = 'O';
-    let pracTurn   = 'X'; // X always moves first per tic-tac-toe rules
+    let pBoard      = Array(9).fill(null);
+    let pOver       = false;
+    let hintsOn     = true;
+    let difficulty  = 'unbeatable';
+    let userPlayer  = 'X';
+    let aiPlayer    = 'O';
+    let pracTurn    = 'X'; // X always moves first per tic-tac-toe rules
+    let aiTimeoutId = null; // tracks pending AI move so reset can cancel it
 
     const pracBoardEl  = document.getElementById('practice-board');
     const pcells       = pracBoardEl.querySelectorAll('.pcell');
@@ -910,12 +911,14 @@
 
     // ── AI takes its turn ─────────────────────────────────────────────────
     function doAITurn() {
+      if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
       pracBoardEl.classList.add('ai-turn');
       pracStatusEl.textContent = 'AI is thinking...';
       hintBoxEl.className = 'hint-box';
       hintBoxEl.textContent = '';
 
-      setTimeout(() => {
+      aiTimeoutId = setTimeout(() => {
+        aiTimeoutId = null;
         const aiIdx       = getAIMove([...pBoard], aiPlayer);
         const explanation = getStrategyMove(pBoard, aiPlayer);
 
@@ -991,6 +994,7 @@
 
     // ── Reset board ───────────────────────────────────────────────────────
     function pracReset() {
+      if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
       pBoard   = Array(9).fill(null);
       pOver    = false;
       pracTurn = 'X';
