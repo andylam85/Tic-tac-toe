@@ -301,7 +301,13 @@
     .ldot.le { background:#1a1a2e; border-color:#2d2d4e; }
 
     /* ── Practice Controls ────────────────────────────────────────────────── */
-    .prac-controls { display:flex; gap:12px; flex-wrap:wrap; }
+    .prac-controls { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+    .ctrl-group { display:flex; flex-direction:column; gap:6px; }
+    .ctrl-label { font-size:.68rem; letter-spacing:1.5px; text-transform:uppercase; color:#888aaa; }
+    .tog-group { display:flex; gap:4px; }
+    .tog { padding:8px 14px; border-radius:6px; background:#1a1a2e; color:#888aaa; border:1px solid #2d2d4e; font-size:.82rem; font-weight:600; cursor:pointer; transition:all .15s; letter-spacing:.5px; }
+    .tog:hover { border-color:#4444aa; color:#e0e0f0; }
+    .tog.active { background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; border-color:transparent; }
     .hint-btn { background:#1e1e3a; color:#a78bfa; border:1px solid #4c3a8a; padding:10px 20px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; transition:opacity .2s; }
     .hint-btn.off { color:#888aaa; border-color:#2d2d4e; }
     .sec-btn { background:#1e1e3a; color:#888aaa; border:1px solid #2d2d4e; padding:10px 20px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; transition:opacity .2s; }
@@ -425,7 +431,24 @@
     <!-- Practice vs AI -->
     <div class="learn-block">
       <h2 class="learn-title">Practice vs AI</h2>
-      <p class="learn-sub">You are X. The AI plays perfect tic-tac-toe and can never lose.</p>
+      <p class="learn-sub">Choose your difficulty and whether you go first or second.</p>
+      <div class="prac-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Difficulty</span>
+          <div class="tog-group" id="difficulty-group">
+            <button class="tog" data-val="easy">Easy</button>
+            <button class="tog" data-val="medium">Medium</button>
+            <button class="tog active" data-val="unbeatable">Unbeatable</button>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">You play as</span>
+          <div class="tog-group" id="turn-group">
+            <button class="tog active" data-val="X">X · 1st</button>
+            <button class="tog" data-val="O">O · 2nd</button>
+          </div>
+        </div>
+      </div>
       <div class="prac-controls">
         <button class="hint-btn" id="hint-toggle">💡 Hints: ON</button>
         <button class="sec-btn" id="prac-new">New Game</button>
@@ -784,34 +807,35 @@
     // Score +10 = AI wins, -10 = player wins, 0 = draw.
     // Depth penalty means AI prefers faster wins and slower losses.
     // ══════════════════════════════════════════════════════════════════════
-    function minimax(b, depth, isMax) {
+    function minimax(b, depth, isMax, aiPl, humanPl) {
       for (const [a, bb, c] of WINNING_LINES) {
         if (b[a] && b[a] === b[bb] && b[a] === b[c])
-          return b[a] === 'O' ? 10 - depth : depth - 10;
+          return b[a] === aiPl ? 10 - depth : depth - 10;
       }
       if (b.every(x => x)) return 0;
 
       if (isMax) {
         let best = -Infinity;
         for (let i = 0; i < 9; i++) {
-          if (!b[i]) { b[i]='O'; best=Math.max(best,minimax(b,depth+1,false)); b[i]=null; }
+          if (!b[i]) { b[i]=aiPl; best=Math.max(best,minimax(b,depth+1,false,aiPl,humanPl)); b[i]=null; }
         }
         return best;
       } else {
         let best = Infinity;
         for (let i = 0; i < 9; i++) {
-          if (!b[i]) { b[i]='X'; best=Math.min(best,minimax(b,depth+1,true)); b[i]=null; }
+          if (!b[i]) { b[i]=humanPl; best=Math.min(best,minimax(b,depth+1,true,aiPl,humanPl)); b[i]=null; }
         }
         return best;
       }
     }
 
-    function getBestAIMove(b) {
+    function getBestAIMove(b, aiPl) {
+      const humanPl = aiPl === 'O' ? 'X' : 'O';
       let best = -Infinity, idx = -1;
       for (let i = 0; i < 9; i++) {
         if (!b[i]) {
-          b[i] = 'O';
-          const s = minimax(b, 0, false);
+          b[i] = aiPl;
+          const s = minimax(b, 0, false, aiPl, humanPl);
           b[i] = null;
           if (s > best) { best = s; idx = i; }
         }
@@ -821,11 +845,16 @@
 
     // ══════════════════════════════════════════════════════════════════════
     // PRACTICE GAME
-    // Separate state from the main game — they never interfere.
+    // Supports difficulty (easy / medium / unbeatable) and user choosing
+    // to play as X (goes first) or O (goes second, AI opens).
     // ══════════════════════════════════════════════════════════════════════
-    let pBoard   = Array(9).fill(null);
-    let pOver    = false;
-    let hintsOn  = true;
+    let pBoard     = Array(9).fill(null);
+    let pOver      = false;
+    let hintsOn    = true;
+    let difficulty = 'unbeatable';
+    let userPlayer = 'X';
+    let aiPlayer   = 'O';
+    let pracTurn   = 'X'; // X always moves first per tic-tac-toe rules
 
     const pracBoardEl  = document.getElementById('practice-board');
     const pcells       = pracBoardEl.querySelectorAll('.pcell');
@@ -835,10 +864,36 @@
     const hintToggleEl = document.getElementById('hint-toggle');
     const pracNewEl    = document.getElementById('prac-new');
 
+    // ── Difficulty-aware AI move dispatcher ───────────────────────────────
+    function getRandomMove(b) {
+      const empty = b.reduce((a,v,i) => { if (!v) a.push(i); return a; }, []);
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function getMediumAIMove(b, aiPl) {
+      const humanPl = aiPl === 'O' ? 'X' : 'O';
+      const win = findWin(b, aiPl);
+      if (win !== -1) return win;                              // always take win
+      const block = findWin(b, humanPl);
+      if (block !== -1 && Math.random() > 0.15) return block; // usually block
+      if (Math.random() > 0.45) {                             // sometimes strategic
+        const s = getStrategyMove(b, aiPl);
+        if (s) return s.idx;
+      }
+      return getRandomMove(b);
+    }
+
+    function getAIMove(b, aiPl) {
+      if (difficulty === 'easy')   return getRandomMove(b);
+      if (difficulty === 'medium') return getMediumAIMove(b, aiPl);
+      return getBestAIMove(b, aiPl);
+    }
+
+    // ── Hint display ──────────────────────────────────────────────────────
     function updateHint() {
       pcells.forEach(c => c.classList.remove('hint-hl'));
       if (!hintsOn || pOver) { hintBoxEl.className = 'hint-box'; return; }
-      const move = getStrategyMove(pBoard, 'X');
+      const move = getStrategyMove(pBoard, userPlayer);
       if (!move) return;
       hintBoxEl.className = 'hint-box ' + (move.cls || '');
       hintBoxEl.textContent = move.reason;
@@ -853,21 +908,71 @@
       return null;
     }
 
+    // ── AI takes its turn ─────────────────────────────────────────────────
+    function doAITurn() {
+      pracBoardEl.classList.add('ai-turn');
+      pracStatusEl.textContent = 'AI is thinking...';
+      hintBoxEl.className = 'hint-box';
+      hintBoxEl.textContent = '';
+
+      setTimeout(() => {
+        const aiIdx       = getAIMove([...pBoard], aiPlayer);
+        const explanation = getStrategyMove(pBoard, aiPlayer);
+
+        pBoard[aiIdx] = aiPlayer;
+        pcells[aiIdx].textContent = aiPlayer;
+        pcells[aiIdx].classList.add('taken', aiPlayer.toLowerCase());
+        pracBoardEl.classList.remove('ai-turn');
+        pracTurn = userPlayer;
+
+        aiBoxEl.textContent = (explanation && explanation.idx === aiIdx)
+          ? 'AI (' + aiPlayer + '): ' + explanation.reason
+          : 'AI (' + aiPlayer + ') played the optimal move.';
+
+        const res = checkPracWin(pBoard);
+        if (res) {
+          pOver = true;
+          res.line.forEach(i => {
+            pcells[i].classList.add('winning');
+            if (res.player === 'O') pcells[i].classList.add('o');
+          });
+          pracStatusEl.textContent = 'AI wins — try again with hints on!';
+          hintBoxEl.className = 'hint-box hb';
+          hintBoxEl.textContent = "💡 Notice where AI created two threats at once — that's a fork!";
+          return;
+        }
+        if (pBoard.every(x => x)) {
+          pOver = true;
+          pracStatusEl.textContent = 'Draw — great defense!';
+          hintBoxEl.className = 'hint-box';
+          hintBoxEl.textContent = 'Perfect play from both sides always ends in a draw.';
+          return;
+        }
+        pracStatusEl.textContent = 'Your turn (' + userPlayer + ')';
+        updateHint();
+      }, 650);
+    }
+
+    // ── User clicks a cell ────────────────────────────────────────────────
     function pracClick(e) {
       if (pOver || pracBoardEl.classList.contains('ai-turn')) return;
+      if (pracTurn !== userPlayer) return;
       const idx = parseInt(e.currentTarget.dataset.i);
       if (pBoard[idx]) return;
 
-      // Player move (X)
-      pBoard[idx] = 'X';
-      pcells[idx].textContent = 'X';
-      pcells[idx].classList.add('taken', 'x');
+      pBoard[idx] = userPlayer;
+      pcells[idx].textContent = userPlayer;
+      pcells[idx].classList.add('taken', userPlayer.toLowerCase());
       pcells.forEach(c => c.classList.remove('hint-hl'));
+      pracTurn = aiPlayer;
 
-      let res = checkPracWin(pBoard);
+      const res = checkPracWin(pBoard);
       if (res) {
         pOver = true;
-        res.line.forEach(i => pcells[i].classList.add('winning'));
+        res.line.forEach(i => {
+          pcells[i].classList.add('winning');
+          if (res.player === 'O') pcells[i].classList.add('o');
+        });
         pracStatusEl.textContent = 'You win! 🎉';
         hintBoxEl.className = 'hint-box hw';
         hintBoxEl.textContent = '🏆 You found the winning move!';
@@ -876,64 +981,37 @@
       }
       if (pBoard.every(x => x)) {
         pOver = true;
-        pracStatusEl.textContent = "Draw!";
+        pracStatusEl.textContent = 'Draw!';
         hintBoxEl.className = 'hint-box';
-        hintBoxEl.textContent = 'Perfect defense from both sides — a draw!';
+        hintBoxEl.textContent = 'Perfect play from both sides — a draw!';
         return;
       }
-
-      // AI turn
-      pracBoardEl.classList.add('ai-turn');
-      pracStatusEl.textContent = 'AI is thinking...';
-      hintBoxEl.className = 'hint-box';
-      hintBoxEl.textContent = '';
-
-      setTimeout(() => {
-        const aiIdx = getBestAIMove([...pBoard]);
-        // Explain AI move using strategy hierarchy
-        const explanation = getStrategyMove(pBoard, 'O');
-        pBoard[aiIdx] = 'O';
-        pcells[aiIdx].textContent = 'O';
-        pcells[aiIdx].classList.add('taken', 'o');
-        pracBoardEl.classList.remove('ai-turn');
-
-        if (explanation && explanation.idx === aiIdx) {
-          aiBoxEl.textContent = 'AI: ' + explanation.reason;
-        } else {
-          aiBoxEl.textContent = 'AI played the optimal move.';
-        }
-
-        res = checkPracWin(pBoard);
-        if (res) {
-          pOver = true;
-          res.line.forEach(i => { pcells[i].classList.add('winning', 'o'); });
-          pracStatusEl.textContent = 'AI wins — study the hints and try again!';
-          hintBoxEl.className = 'hint-box hb';
-          hintBoxEl.textContent = '💡 Look at where the AI built two threats. Use hints next time!';
-          return;
-        }
-        if (pBoard.every(x => x)) {
-          pOver = true;
-          pracStatusEl.textContent = "Draw — well played!";
-          return;
-        }
-
-        pracStatusEl.textContent = 'Your turn (X)';
-        updateHint();
-      }, 650);
+      doAITurn();
     }
 
+    // ── Reset board ───────────────────────────────────────────────────────
     function pracReset() {
-      pBoard = Array(9).fill(null);
-      pOver  = false;
+      pBoard   = Array(9).fill(null);
+      pOver    = false;
+      pracTurn = 'X';
       pracBoardEl.classList.remove('ai-turn');
       pcells.forEach(c => { c.textContent = ''; c.className = 'pcell'; });
-      pracStatusEl.textContent = 'Your turn (X)';
-      aiBoxEl.textContent = 'AI is waiting for your move...';
-      updateHint();
+      aiBoxEl.textContent = '';
+
+      if (userPlayer === 'X') {
+        pracStatusEl.textContent = 'Your turn (X) — you go first!';
+        updateHint();
+      } else {
+        pracStatusEl.textContent = 'AI goes first (X)...';
+        hintBoxEl.className = 'hint-box';
+        hintBoxEl.textContent = '';
+        doAITurn();
+      }
     }
 
+    // ── Event listeners ───────────────────────────────────────────────────
     pcells.forEach(c => c.addEventListener('click', pracClick));
+
     hintToggleEl.addEventListener('click', () => {
       hintsOn = !hintsOn;
       hintToggleEl.textContent = hintsOn ? '💡 Hints: ON' : '💡 Hints: OFF';
@@ -944,7 +1022,27 @@
         hintBoxEl.textContent = 'Hints off — trust your instincts!';
       } else { updateHint(); }
     });
+
     pracNewEl.addEventListener('click', pracReset);
+
+    document.querySelectorAll('#difficulty-group .tog').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#difficulty-group .tog').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        difficulty = btn.dataset.val;
+        pracReset();
+      });
+    });
+
+    document.querySelectorAll('#turn-group .tog').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#turn-group .tog').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        userPlayer = btn.dataset.val;
+        aiPlayer   = userPlayer === 'X' ? 'O' : 'X';
+        pracReset();
+      });
+    });
 
     // ══════════════════════════════════════════════════════════════════════
     // STRATEGY CARD RENDERING
@@ -1022,8 +1120,8 @@
       posGridEl.appendChild(d);
     });
 
-    // Init practice hint on page load
-    updateHint();
+    // Init practice game on page load
+    pracReset();
   </script>
 </body>
 </html>
