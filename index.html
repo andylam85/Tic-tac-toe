@@ -523,9 +523,9 @@
         <div class="ctrl-group">
           <span class="ctrl-label">Difficulty</span>
           <div class="tog-group" id="difficulty-group">
-            <button class="tog" data-val="easy">Easy</button>
+            <button class="tog active" data-val="easy">Easy</button>
             <button class="tog" data-val="medium">Medium</button>
-            <button class="tog active" data-val="unbeatable">Unbeatable</button>
+            <button class="tog" data-val="unbeatable">Unbeatable</button>
           </div>
         </div>
         <div class="ctrl-group">
@@ -559,8 +559,8 @@
         <div class="ctrl-group">
           <span class="ctrl-label">⏱ Move Timer</span>
           <div class="timer-ctrl">
-            <input type="range" id="timer-slider" min="0" max="10" value="0" step="1" />
-            <span class="timer-val" id="timer-val-label">Off</span>
+            <input type="range" id="timer-slider" min="0" max="10" value="5" step="1" />
+            <span class="timer-val" id="timer-val-label">5s</span>
           </div>
         </div>
       </div>
@@ -1057,12 +1057,12 @@
     let pBoard      = Array(9).fill(null);
     let pOver       = false;
     let hintsOn     = true;
-    let difficulty  = 'unbeatable';
+    let difficulty  = 'easy';
     let userPlayer  = 'X';
     let aiPlayer    = 'O';
     let pracTurn    = 'X'; // X always moves first per tic-tac-toe rules
     let aiTimeoutId  = null; // tracks pending AI move so reset can cancel it
-    let timerEnabled = false;
+    let timerEnabled = true;
     let timeLimit    = 5;
     let timeLeft     = 5;
     let timerIntId   = null; // setInterval handle for the countdown
@@ -1455,7 +1455,7 @@
         timeLimit = val;
         timerValLbl.textContent = val + 's';
       }
-      pracReset(); // Restart game with new timer setting
+      // Timer applies on the next New Game — no auto-reset
     });
 
     // Init practice game on page load
