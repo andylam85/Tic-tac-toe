@@ -1248,6 +1248,7 @@
         btn.classList.add('active');
         userPlayer = btn.dataset.val;
         aiPlayer   = userPlayer === 'X' ? 'O' : 'X';
+        resetPracScore();
         pracReset();
       });
     });
