@@ -408,7 +408,7 @@
   <h1>Tic Tac Toe</h1>
 
   <div class="tab-bar">
-    <button class="tab active" data-tab="play">🎮 Play</button>
+    <button class="tab active" data-tab="play">⚔️ 1v1</button>
     <button class="tab" data-tab="learn">📚 Learn</button>
   </div>
 
@@ -456,6 +456,33 @@
   <div class="buttons">
     <button id="btn-new-game">New Game</button>
     <button id="btn-reset-score">Reset Score</button>
+  </div>
+
+  <!-- Who Goes First + Timer controls -->
+  <div class="prac-controls" style="justify-content:center">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Who Goes First</span>
+      <div class="tog-group" id="v1-turn-group">
+        <button class="tog active" data-val="X">X First</button>
+        <button class="tog" data-val="O">O First</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">⏱ Move Timer</span>
+      <div class="timer-ctrl">
+        <input type="range" id="v1-timer-slider" min="0" max="10" value="0" step="1" />
+        <span class="timer-val" id="v1-timer-val-label">Off</span>
+      </div>
+    </div>
+  </div>
+  <div id="v1-timer-wrap" class="timer-wrap hidden">
+    <div class="timer-header">
+      <span class="timer-label-txt">⏱ Time Left</span>
+      <div class="timer-number" id="v1-timer-number">5</div>
+    </div>
+    <div class="timer-bar-wrap">
+      <div class="timer-bar" id="v1-timer-bar"></div>
+    </div>
   </div>
 
   </div><!-- /play-section -->
@@ -633,10 +660,21 @@
       gameOver: a flag (true/false) so we stop accepting clicks after a win.
       scores: an object holding each player's total wins across rounds.
     */
-    let board         = Array(9).fill(null); // [null, null, null, null, null, null, null, null, null]
-    let currentPlayer = 'X';
-    let gameOver      = false;
-    let scores        = { X: 0, O: 0 };
+    let board           = Array(9).fill(null);
+    let currentPlayer   = 'X';
+    let gameOver        = false;
+    let scores          = { X: 0, O: 0 };
+    let v1FirstPlayer   = 'X';
+    let v1TimerEnabled  = false;
+    let v1TimeLimit     = 5;
+    let v1TimeLeft      = 5;
+    let v1TimerIntId    = null;
+
+    const v1TimerSliderEl   = document.getElementById('v1-timer-slider');
+    const v1TimerValLabelEl = document.getElementById('v1-timer-val-label');
+    const v1TimerWrapEl     = document.getElementById('v1-timer-wrap');
+    const v1TimerNumEl      = document.getElementById('v1-timer-number');
+    const v1TimerBarEl      = document.getElementById('v1-timer-bar');
 
     // ── Core Functions ─────────────────────────────────────────────────────
 
@@ -690,49 +728,99 @@
       cell.classList.add('taken');            // Prevent hover effect
       cell.classList.add(currentPlayer.toLowerCase()); // Add 'x' or 'o' class for color
 
+      stopV1Timer(); // Player moved — stop the countdown
+
       // Check if this move created a winner
       const result = checkWinner();
       if (result) {
         gameOver = true;
 
-        // Highlight the three winning cells
         result.line.forEach(i => {
           cells[i].classList.add('winning');
-          // Also add 'o' class to winning cells if O won, for the blue highlight
           if (result.player === 'O') cells[i].classList.add('o');
         });
 
-        // Update the status message
         statusEl.textContent = `${result.player} wins! 🎉`;
-
-        // Add a win to the correct player's score
         scores[result.player]++;
 
-        // Update the score display on screen
         if (result.player === 'X') {
           scoreXEl.textContent = scores.X;
-          flashCard(cardXEl); // Animate the X score card
+          flashCard(cardXEl);
         } else {
           scoreOEl.textContent = scores.O;
-          flashCard(cardOEl); // Animate the O score card
+          flashCard(cardOEl);
         }
-        return; // Stop here — no need to check for draw or switch turns
+        return;
       }
 
       // Check if the board is full (draw)
       if (checkDraw()) {
         gameOver = true;
         statusEl.textContent = "It's a draw!";
-        boardEl.classList.add('draw'); // Dim empty cells
+        boardEl.classList.add('draw');
         return;
       }
 
-      // No winner, no draw → switch to the other player
+      // No winner, no draw → switch to the other player and start their timer
       currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-      // The above line uses a "ternary operator" — a compact if/else:
-      // condition ? valueIfTrue : valueIfFalse
-
       statusEl.textContent = `${currentPlayer}'s turn`;
+      startV1Timer();
+    }
+
+    // ── 1v1 Move Timer ─────────────────────────────────────────────────────
+
+    function stopV1Timer() {
+      if (v1TimerIntId) { clearInterval(v1TimerIntId); v1TimerIntId = null; }
+    }
+
+    function updateV1TimerDisplay() {
+      const pct = v1TimeLeft / v1TimeLimit;
+      v1TimerNumEl.textContent = Math.ceil(v1TimeLeft);
+      v1TimerBarEl.style.width = (pct * 100) + '%';
+      if (pct > 0.5) {
+        v1TimerNumEl.className = 'timer-number';
+        v1TimerBarEl.className = 'timer-bar';
+        v1TimerWrapEl.classList.remove('urgent');
+      } else if (pct > 0.25) {
+        v1TimerNumEl.className = 'timer-number yellow';
+        v1TimerBarEl.className = 'timer-bar yellow';
+        v1TimerWrapEl.classList.remove('urgent');
+      } else {
+        v1TimerNumEl.className = 'timer-number red pulse';
+        v1TimerBarEl.className = 'timer-bar red';
+        v1TimerWrapEl.classList.add('urgent');
+      }
+    }
+
+    function handleV1TimerExpiry() {
+      gameOver = true;
+      stopV1Timer();
+      v1TimerNumEl.textContent = '0';
+      v1TimerBarEl.style.width = '0%';
+      // The player who ran out of time loses — the OTHER player wins
+      const winner = currentPlayer === 'X' ? 'O' : 'X';
+      statusEl.textContent = `${currentPlayer} ran out of time — ${winner} wins! ⏰`;
+      scores[winner]++;
+      if (winner === 'X') {
+        scoreXEl.textContent = scores.X;
+        flashCard(cardXEl);
+      } else {
+        scoreOEl.textContent = scores.O;
+        flashCard(cardOEl);
+      }
+    }
+
+    function startV1Timer() {
+      if (!v1TimerEnabled || gameOver) return;
+      stopV1Timer();
+      v1TimeLeft = v1TimeLimit;
+      updateV1TimerDisplay();
+      v1TimerWrapEl.classList.remove('hidden');
+      v1TimerIntId = setInterval(() => {
+        v1TimeLeft = Math.max(0, v1TimeLeft - 0.1);
+        updateV1TimerDisplay();
+        if (v1TimeLeft <= 0) { stopV1Timer(); handleV1TimerExpiry(); }
+      }, 100);
     }
 
     /*
@@ -757,19 +845,19 @@
       We clear the board array, reset the flags, and clean up the cells visually.
     */
     function newGame() {
-      board         = Array(9).fill(null); // Empty all 9 slots
-      currentPlayer = 'X';                // X always goes first
+      stopV1Timer();
+      board         = Array(9).fill(null);
+      currentPlayer = v1FirstPlayer;
       gameOver      = false;
-      boardEl.classList.remove('draw');   // Remove draw styling
+      boardEl.classList.remove('draw');
 
-      // Loop through all 9 cells and clear them
       cells.forEach(cell => {
-        cell.textContent = '';            // Remove the X or O text
-        cell.className = 'cell';          // Reset to just the base class
-        // (This removes 'taken', 'x', 'o', 'winning' all at once)
+        cell.textContent = '';
+        cell.className = 'cell';
       });
 
-      statusEl.textContent = "X's turn";
+      statusEl.textContent = `${currentPlayer}'s turn`;
+      startV1Timer();
     }
 
     /*
@@ -798,6 +886,31 @@
     // Connect the buttons to their functions
     btnNewGame.addEventListener('click', newGame);
     btnReset.addEventListener('click', resetScore);
+
+    // Who goes first toggle
+    document.querySelectorAll('#v1-turn-group .tog').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#v1-turn-group .tog').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        v1FirstPlayer = btn.dataset.val;
+        newGame();
+      });
+    });
+
+    // 1v1 timer slider
+    v1TimerSliderEl.addEventListener('input', () => {
+      const val = parseInt(v1TimerSliderEl.value);
+      if (val === 0) {
+        v1TimerEnabled = false;
+        v1TimerValLabelEl.textContent = 'Off';
+        v1TimerWrapEl.classList.add('hidden');
+        stopV1Timer();
+      } else {
+        v1TimerEnabled = true;
+        v1TimeLimit = val;
+        v1TimerValLabelEl.textContent = val + 's';
+      }
+    });
 
     /*
       That's it! The page is now fully interactive.
