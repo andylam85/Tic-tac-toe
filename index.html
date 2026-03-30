@@ -1301,6 +1301,21 @@
     }
 
     // ── Reset board ───────────────────────────────────────────────────────
+    function pracIdle() {
+      if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+      stopTimer();
+      timerWrapEl.classList.add('hidden');
+      pBoard   = Array(9).fill(null);
+      pOver    = true; // board unclickable until New Game
+      pracTurn = 'X';
+      pracBoardEl.classList.remove('ai-turn');
+      pcells.forEach(c => { c.textContent = ''; c.className = 'pcell'; });
+      aiBoxEl.textContent = '';
+      pracStatusEl.textContent = '';
+      hintBoxEl.className = 'hint-box';
+      hintBoxEl.textContent = 'Choose your settings and tap New Game to start.';
+    }
+
     function pracReset() {
       if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
       stopTimer();
@@ -1353,7 +1368,7 @@
         btn.classList.add('active');
         difficulty = btn.dataset.val;
         resetPracScore();
-        pracReset();
+        pracIdle();
       });
     });
 
@@ -1364,7 +1379,7 @@
         userPlayer = btn.dataset.val;
         aiPlayer   = userPlayer === 'X' ? 'O' : 'X';
         resetPracScore();
-        pracReset();
+        pracIdle();
       });
     });
 
@@ -1458,8 +1473,8 @@
       // Timer applies on the next New Game — no auto-reset
     });
 
-    // Init practice game on page load
-    pracReset();
+    // Init practice game on page load — idle until user clicks New Game
+    pracIdle();
   </script>
 </body>
 </html>
